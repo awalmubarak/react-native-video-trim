@@ -800,6 +800,34 @@ extension VideoTrim {
         }
       }
       
+      // Set up event callbacks for range change and scrubbing
+      vc.onRangeChange = { startMs, endMs in
+        let eventPayload: [String: Any] = [
+          "startMs": startMs,
+          "endMs": endMs
+        ]
+        self.emitEventToJS("onRangeChange", eventData: eventPayload)
+      }
+      
+      vc.onRangeCommit = { startMs, endMs in
+        let eventPayload: [String: Any] = [
+          "startMs": startMs,
+          "endMs": endMs
+        ]
+        self.emitEventToJS("onRangeCommit", eventData: eventPayload)
+      }
+      
+      vc.onScrub = { ms in
+        let eventPayload: [String: Any] = [
+          "ms": ms
+        ]
+        self.emitEventToJS("onScrub", eventData: eventPayload)
+      }
+      
+      vc.onScrubEnd = {
+        self.emitEventToJS("onScrubEnd", eventData: nil)
+      }
+      
       vc.isModalInPresentation = true // prevent modal closed by swipe down
       
       if self.fullScreenModalIOS {

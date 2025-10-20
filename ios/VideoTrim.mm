@@ -209,6 +209,14 @@ RCT_EXPORT_MODULE()
     [self emitOnFinishTrimming:body];
   } else if ([eventName isEqualToString:@"onStatistics"]) {
     [self emitOnStatistics:body];
+  } else if ([eventName isEqualToString:@"onRangeChange"]) {
+    [self emitOnRangeChange:body];
+  } else if ([eventName isEqualToString:@"onRangeCommit"]) {
+    [self emitOnRangeCommit:body];
+  } else if ([eventName isEqualToString:@"onScrub"]) {
+    [self emitOnScrub:body];
+  } else if ([eventName isEqualToString:@"onScrubEnd"]) {
+    [self emitOnScrubEnd];
   }
 }
 

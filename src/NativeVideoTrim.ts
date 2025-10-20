@@ -139,6 +139,18 @@ export interface Spec extends TurboModule {
   readonly onLoad: EventEmitter<{
     duration: number;
   }>;
+  readonly onRangeChange: EventEmitter<{
+    startMs: number;
+    endMs: number;
+  }>;
+  readonly onRangeCommit: EventEmitter<{
+    startMs: number;
+    endMs: number;
+  }>;
+  readonly onScrub: EventEmitter<{
+    ms: number;
+  }>;
+  readonly onScrubEnd: EventEmitter<void>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('VideoTrim');

@@ -46,6 +46,10 @@ class VideoTrimmerViewController: UIViewController {
     private var saveButtonText = "Save"
     var cancelBtnClicked: (() -> Void)?
     var saveBtnClicked: ((CMTimeRange) -> Void)?
+    var onRangeChange: ((_ startMs: Double, _ endMs: Double) -> Void)?
+    var onRangeCommit: ((_ startMs: Double, _ endMs: Double) -> Void)?
+    var onScrub: ((_ ms: Double) -> Void)?
+    var onScrubEnd: (() -> Void)?
     private var enableHapticFeedback = true
     private var zoomOnWaitingDuration: Double = 5.0 // Default: 5 seconds
     
@@ -118,10 +122,20 @@ class VideoTrimmerViewController: UIViewController {
     
     @objc private func leadingGrabberChanged(_ sender: VideoTrimmer) {
         handleProgressChanged(time: trimmer.selectedRange.start)
+        
+        // Emit range change event
+        let startMs = trimmer.selectedRange.start.seconds * 1000
+        let endMs = trimmer.selectedRange.end.seconds * 1000
+        onRangeChange?(startMs, endMs)
     }
     
     @objc private func didEndTrimmingFromStart(_ sender: VideoTrimmer) {
         handleTrimmingEnd(true)
+        
+        // Emit range commit event
+        let startMs = trimmer.selectedRange.start.seconds * 1000
+        let endMs = trimmer.selectedRange.end.seconds * 1000
+        onRangeCommit?(startMs, endMs)
     }
     
     @objc private func didBeginTrimmingFromEnd(_ sender: VideoTrimmer) {
@@ -130,10 +144,20 @@ class VideoTrimmerViewController: UIViewController {
     
     @objc private func trailingGrabberChanged(_ sender: VideoTrimmer) {
         handleProgressChanged(time: trimmer.selectedRange.end)
+        
+        // Emit range change event
+        let startMs = trimmer.selectedRange.start.seconds * 1000
+        let endMs = trimmer.selectedRange.end.seconds * 1000
+        onRangeChange?(startMs, endMs)
     }
     
     @objc private func didEndTrimmingFromEnd(_ sender: VideoTrimmer) {
         handleTrimmingEnd(false)
+        
+        // Emit range commit event
+        let startMs = trimmer.selectedRange.start.seconds * 1000
+        let endMs = trimmer.selectedRange.end.seconds * 1000
+        onRangeCommit?(startMs, endMs)
     }
     
     @objc private func didBeginScrubbing(_ sender: VideoTrimmer) {
@@ -142,10 +166,17 @@ class VideoTrimmerViewController: UIViewController {
     
     @objc private func didEndScrubbing(_ sender: VideoTrimmer) {
         updateLabels()
+        
+        // Emit scrub end event
+        onScrubEnd?()
     }
     
     @objc private func progressDidChanged(_ sender: VideoTrimmer) {
         handleProgressChanged(time: trimmer.progress)
+        
+        // Emit scrub event
+        let ms = trimmer.progress.seconds * 1000
+        onScrub?(ms)
     }
     
     // MARK: - Private
