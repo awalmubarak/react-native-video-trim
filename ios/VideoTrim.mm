@@ -162,6 +162,21 @@ RCT_EXPORT_MODULE()
     dict[@"zoomOnWaitingDuration"] = @(zoomOnWaitingDurationOpt.value());
   }
   
+  auto hideVideoViewOpt = config.hideVideoView();
+  if (hideVideoViewOpt.has_value()) {
+    dict[@"hideVideoView"] = @(hideVideoViewOpt.value());
+  }
+  
+  auto hideTimestampsOpt = config.hideTimestamps();
+  if (hideTimestampsOpt.has_value()) {
+    dict[@"hideTimestamps"] = @(hideTimestampsOpt.value());
+  }
+  
+  auto snapLeftOnReleaseOpt = config.snapLeftOnRelease();
+  if (snapLeftOnReleaseOpt.has_value()) {
+    dict[@"snapLeftOnRelease"] = @(snapLeftOnReleaseOpt.value());
+  }
+  
   [self->videoTrim showEditor:filePath withConfig:dict];
 }
 
@@ -194,6 +209,14 @@ RCT_EXPORT_MODULE()
     [self emitOnFinishTrimming:body];
   } else if ([eventName isEqualToString:@"onStatistics"]) {
     [self emitOnStatistics:body];
+  } else if ([eventName isEqualToString:@"onRangeChange"]) {
+    [self emitOnRangeChange:body];
+  } else if ([eventName isEqualToString:@"onRangeCommit"]) {
+    [self emitOnRangeCommit:body];
+  } else if ([eventName isEqualToString:@"onScrub"]) {
+    [self emitOnScrub:body];
+  } else if ([eventName isEqualToString:@"onScrubEnd"]) {
+    [self emitOnScrubEnd];
   }
 }
 

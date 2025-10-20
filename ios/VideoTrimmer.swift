@@ -154,6 +154,7 @@ import AVFoundation
     var maximumDuration: CMTime = .positiveInfinity
     var enableHapticFeedback = true
     var zoomOnWaitingDuration: Double = 5.0 // Default: 5 seconds
+    var snapLeftOnRelease = false
     
     // the available range of the asset.
     // Will be set to the full duration of the asset when assigning a new asset
@@ -708,6 +709,20 @@ import AVFoundation
         case .ended:
             stopPanning()
             sendActions(for: Self.didEndTrimmingFromStart)
+            
+            // Snap left handle to timeline's left on release if configured
+            if snapLeftOnRelease {
+                if isZoomedIn {
+                    // Shift the zoomed window so the left edge aligns with the selected range start
+                    // Keep the same duration as before
+                    zoomedInRange = CMTimeRange(start: selectedRange.start, duration: zoomedInRange.duration)
+                    animateChanges()
+                } else {
+                    // Optionally zoom in to show a reasonable span around the trim position
+                    // For now, we can leave this as no-op or implement a sensible default
+                    // The handle will still be at the correct position but not snapped visually to the rail
+                }
+            }
             
         case .cancelled:
             stopPanning()

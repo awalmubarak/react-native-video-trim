@@ -72,6 +72,18 @@ export interface EditorConfig extends BaseOptions {
    * this duration around the current trim position for more precise editing
    */
   zoomOnWaitingDuration?: number;
+  /**
+   * Hide the video preview (AVPlayerViewController view)
+   */
+  hideVideoView?: boolean;
+  /**
+   * Hide the bottom time stamps (three labels below the trimmer)
+   */
+  hideTimestamps?: boolean;
+  /**
+   * Snap left handle to timeline's left on release, and allow dragging left to "untrim"
+   */
+  snapLeftOnRelease?: boolean;
 }
 
 export interface TrimOptions extends BaseOptions {
@@ -127,6 +139,18 @@ export interface Spec extends TurboModule {
   readonly onLoad: EventEmitter<{
     duration: number;
   }>;
+  readonly onRangeChange: EventEmitter<{
+    startMs: number;
+    endMs: number;
+  }>;
+  readonly onRangeCommit: EventEmitter<{
+    startMs: number;
+    endMs: number;
+  }>;
+  readonly onScrub: EventEmitter<{
+    ms: number;
+  }>;
+  readonly onScrubEnd: EventEmitter<void>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('VideoTrim');

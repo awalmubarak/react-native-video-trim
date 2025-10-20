@@ -46,8 +46,17 @@ class VideoTrimmerViewController: UIViewController {
     private var saveButtonText = "Save"
     var cancelBtnClicked: (() -> Void)?
     var saveBtnClicked: ((CMTimeRange) -> Void)?
+    var onRangeChange: ((_ startMs: Double, _ endMs: Double) -> Void)?
+    var onRangeCommit: ((_ startMs: Double, _ endMs: Double) -> Void)?
+    var onScrub: ((_ ms: Double) -> Void)?
+    var onScrubEnd: (() -> Void)?
     private var enableHapticFeedback = true
     private var zoomOnWaitingDuration: Double = 5.0 // Default: 5 seconds
+    
+    // New visibility and behavior properties
+    private var hideVideoView = false
+    private var hideTimestamps = false
+    private var snapLeftOnRelease = false
     
     // New color properties
     private var trimmerColor: UIColor = UIColor.systemYellow
@@ -113,10 +122,20 @@ class VideoTrimmerViewController: UIViewController {
     
     @objc private func leadingGrabberChanged(_ sender: VideoTrimmer) {
         handleProgressChanged(time: trimmer.selectedRange.start)
+        
+        // Emit range change event
+        let startMs = trimmer.selectedRange.start.seconds * 1000
+        let endMs = trimmer.selectedRange.end.seconds * 1000
+        onRangeChange?(startMs, endMs)
     }
     
     @objc private func didEndTrimmingFromStart(_ sender: VideoTrimmer) {
         handleTrimmingEnd(true)
+        
+        // Emit range commit event
+        let startMs = trimmer.selectedRange.start.seconds * 1000
+        let endMs = trimmer.selectedRange.end.seconds * 1000
+        onRangeCommit?(startMs, endMs)
     }
     
     @objc private func didBeginTrimmingFromEnd(_ sender: VideoTrimmer) {
@@ -125,10 +144,20 @@ class VideoTrimmerViewController: UIViewController {
     
     @objc private func trailingGrabberChanged(_ sender: VideoTrimmer) {
         handleProgressChanged(time: trimmer.selectedRange.end)
+        
+        // Emit range change event
+        let startMs = trimmer.selectedRange.start.seconds * 1000
+        let endMs = trimmer.selectedRange.end.seconds * 1000
+        onRangeChange?(startMs, endMs)
     }
     
     @objc private func didEndTrimmingFromEnd(_ sender: VideoTrimmer) {
         handleTrimmingEnd(false)
+        
+        // Emit range commit event
+        let startMs = trimmer.selectedRange.start.seconds * 1000
+        let endMs = trimmer.selectedRange.end.seconds * 1000
+        onRangeCommit?(startMs, endMs)
     }
     
     @objc private func didBeginScrubbing(_ sender: VideoTrimmer) {
@@ -137,10 +166,17 @@ class VideoTrimmerViewController: UIViewController {
     
     @objc private func didEndScrubbing(_ sender: VideoTrimmer) {
         updateLabels()
+        
+        // Emit scrub end event
+        onScrubEnd?()
     }
     
     @objc private func progressDidChanged(_ sender: VideoTrimmer) {
         handleProgressChanged(time: trimmer.progress)
+        
+        // Emit scrub event
+        let ms = trimmer.progress.seconds * 1000
+        onScrub?(ms)
     }
     
     // MARK: - Private
@@ -322,6 +358,9 @@ class VideoTrimmerViewController: UIViewController {
             timingStackView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
             timingStackView.bottomAnchor.constraint(equalTo: btnStackView.topAnchor, constant: -8)
         ])
+        
+        // Hide timestamps if configured
+        timingStackView.isHidden = hideTimestamps
     }
     
     private func setupVideoTrimmer() {
@@ -330,6 +369,7 @@ class VideoTrimmerViewController: UIViewController {
         trimmer.minimumDuration = CMTime(seconds: 1, preferredTimescale: 600)
         trimmer.enableHapticFeedback = enableHapticFeedback
         trimmer.zoomOnWaitingDuration = zoomOnWaitingDuration
+        trimmer.snapLeftOnRelease = snapLeftOnRelease
         
         if let maxDuration = maximumDuration {
             trimmer.maximumDuration = CMTime(seconds: max(1, Double(maxDuration)), preferredTimescale: 600)
@@ -384,15 +424,19 @@ class VideoTrimmerViewController: UIViewController {
         player.addObserver(self, forKeyPath: "status", options: [.new, .initial], context: nil)
         
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
-        addChild(playerController)
-        view.addSubview(playerController.view)
-        playerController.view.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            playerController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            playerController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            playerController.view.topAnchor.constraint(equalTo: headerView != nil ? headerView!.bottomAnchor : view.safeAreaLayoutGuide.topAnchor),
-            playerController.view.bottomAnchor.constraint(equalTo: trimmer.topAnchor, constant: -16)
-        ])
+        
+        // Only add player view to hierarchy if not hidden
+        if !hideVideoView {
+            addChild(playerController)
+            view.addSubview(playerController.view)
+            playerController.view.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                playerController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                playerController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                playerController.view.topAnchor.constraint(equalTo: headerView != nil ? headerView!.bottomAnchor : view.safeAreaLayoutGuide.topAnchor),
+                playerController.view.bottomAnchor.constraint(equalTo: trimmer.topAnchor, constant: -16)
+            ])
+        }
         
         // Add observer for the end of playback
         NotificationCenter.default.addObserver(self, selector: #selector(playerDidFinishPlaying), name: .AVPlayerItemDidPlayToEndTime, object: player.currentItem)
@@ -484,6 +528,11 @@ class VideoTrimmerViewController: UIViewController {
     headerText = config["headerText"] as? String
     headerTextSize = config["headerTextSize"] as? Int ?? 16
     headerTextColor = config["headerTextColor"] as? Double
+    
+    // Handle visibility and behavior properties
+    hideVideoView = config["hideVideoView"] as? Bool ?? false
+    hideTimestamps = config["hideTimestamps"] as? Bool ?? false
+    snapLeftOnRelease = config["snapLeftOnRelease"] as? Bool ?? false
     
     // Handle new color properties
     if let trimmerColorValue = config["trimmerColor"] as? Double {
