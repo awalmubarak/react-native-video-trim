@@ -68,6 +68,9 @@ function createEditorConfig(
     trimmerColor: processColor('#f1d247') as number,
     handleIconColor: processColor('black') as number,
     zoomOnWaitingDuration: 5000,
+    hideVideoView: false,
+    hideTimestamps: false,
+    snapLeftOnRelease: false,
     alertOnFailToLoad: true,
     alertOnFailTitle: 'Error',
     alertOnFailMessage:

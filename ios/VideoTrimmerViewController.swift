@@ -49,8 +49,13 @@ class VideoTrimmerViewController: UIViewController {
     private var enableHapticFeedback = true
     private var zoomOnWaitingDuration: Double = 5.0 // Default: 5 seconds
     
-    // New color properties (matching TypeScript defaults: #f1d247 for trimmer, black for handle)
-    private var trimmerColor: UIColor = UIColor(red: 0.945, green: 0.824, blue: 0.278, alpha: 1.0)
+    // New visibility and behavior properties
+    private var hideVideoView = false
+    private var hideTimestamps = false
+    private var snapLeftOnRelease = false
+    
+    // New color properties
+    private var trimmerColor: UIColor = UIColor.systemYellow
     private var handleIconColor: UIColor = UIColor.black
     
     private let playerController = AVPlayerViewController()
@@ -322,6 +327,9 @@ class VideoTrimmerViewController: UIViewController {
             timingStackView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
             timingStackView.bottomAnchor.constraint(equalTo: btnStackView.topAnchor, constant: -8)
         ])
+        
+        // Hide timestamps if configured
+        timingStackView.isHidden = hideTimestamps
     }
     
     private func setupVideoTrimmer() {
@@ -330,6 +338,7 @@ class VideoTrimmerViewController: UIViewController {
         trimmer.minimumDuration = CMTime(seconds: 1, preferredTimescale: 600)
         trimmer.enableHapticFeedback = enableHapticFeedback
         trimmer.zoomOnWaitingDuration = zoomOnWaitingDuration
+        trimmer.snapLeftOnRelease = snapLeftOnRelease
         
         if let maxDuration = maximumDuration {
             trimmer.maximumDuration = CMTime(seconds: max(1, Double(maxDuration)), preferredTimescale: 600)
@@ -384,15 +393,19 @@ class VideoTrimmerViewController: UIViewController {
         player.addObserver(self, forKeyPath: "status", options: [.new, .initial], context: nil)
         
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
-        addChild(playerController)
-        view.addSubview(playerController.view)
-        playerController.view.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            playerController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            playerController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            playerController.view.topAnchor.constraint(equalTo: headerView != nil ? headerView!.bottomAnchor : view.safeAreaLayoutGuide.topAnchor),
-            playerController.view.bottomAnchor.constraint(equalTo: trimmer.topAnchor, constant: -16)
-        ])
+        
+        // Only add player view to hierarchy if not hidden
+        if !hideVideoView {
+            addChild(playerController)
+            view.addSubview(playerController.view)
+            playerController.view.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                playerController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                playerController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                playerController.view.topAnchor.constraint(equalTo: headerView != nil ? headerView!.bottomAnchor : view.safeAreaLayoutGuide.topAnchor),
+                playerController.view.bottomAnchor.constraint(equalTo: trimmer.topAnchor, constant: -16)
+            ])
+        }
         
         // Add observer for the end of playback
         NotificationCenter.default.addObserver(self, selector: #selector(playerDidFinishPlaying), name: .AVPlayerItemDidPlayToEndTime, object: player.currentItem)
@@ -485,9 +498,14 @@ class VideoTrimmerViewController: UIViewController {
     headerTextSize = config["headerTextSize"] as? Int ?? 16
     headerTextColor = config["headerTextColor"] as? Double
     
+    // Handle visibility and behavior properties
+    hideVideoView = config["hideVideoView"] as? Bool ?? false
+    hideTimestamps = config["hideTimestamps"] as? Bool ?? false
+    snapLeftOnRelease = config["snapLeftOnRelease"] as? Bool ?? false
+    
     // Handle new color properties
     if let trimmerColorValue = config["trimmerColor"] as? Double {
-        trimmerColor = RCTConvert.uiColor(trimmerColorValue) ?? UIColor(red: 0.945, green: 0.824, blue: 0.278, alpha: 1.0)
+        trimmerColor = RCTConvert.uiColor(trimmerColorValue) ?? UIColor.systemYellow
     }
     if let handleIconColorValue = config["handleIconColor"] as? Double {
         handleIconColor = RCTConvert.uiColor(handleIconColorValue) ?? UIColor.black

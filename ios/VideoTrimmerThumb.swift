@@ -166,16 +166,11 @@ class VideoTrimmerThumb: UIView {
     }
     
     private func updateColor() {
-        // Default color matching TypeScript config: #f1d247
-        let color = UIColor(red: 0.945, green: 0.824, blue: 0.278, alpha: 1.0)
+        let color = UIColor.systemYellow
         leadingView.backgroundColor = color
         trailingView.backgroundColor = color
         topView.backgroundColor = color
         bottomView.backgroundColor = color
-        
-        // Default handle icon color is black
-        leadingChevronImageView.tintColor = .black
-        trailingChevronView.tintColor = .black
     }
     
     // MARK: - Public Color Update Methods
