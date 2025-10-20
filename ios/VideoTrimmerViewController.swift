@@ -49,8 +49,8 @@ class VideoTrimmerViewController: UIViewController {
     private var enableHapticFeedback = true
     private var zoomOnWaitingDuration: Double = 5.0 // Default: 5 seconds
     
-    // New color properties
-    private var trimmerColor: UIColor = UIColor.systemYellow
+    // New color properties (matching TypeScript defaults: #f1d247 for trimmer, black for handle)
+    private var trimmerColor: UIColor = UIColor(red: 0.945, green: 0.824, blue: 0.278, alpha: 1.0)
     private var handleIconColor: UIColor = UIColor.black
     
     private let playerController = AVPlayerViewController()
@@ -487,7 +487,7 @@ class VideoTrimmerViewController: UIViewController {
     
     // Handle new color properties
     if let trimmerColorValue = config["trimmerColor"] as? Double {
-        trimmerColor = RCTConvert.uiColor(trimmerColorValue) ?? UIColor.systemYellow
+        trimmerColor = RCTConvert.uiColor(trimmerColorValue) ?? UIColor(red: 0.945, green: 0.824, blue: 0.278, alpha: 1.0)
     }
     if let handleIconColorValue = config["handleIconColor"] as? Double {
         handleIconColor = RCTConvert.uiColor(handleIconColorValue) ?? UIColor.black
